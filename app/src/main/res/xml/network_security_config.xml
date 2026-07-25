@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The REST bridge (Milestone 8) binds to 127.0.0.1 only and is consumed
+    by the local Python SDK over plain HTTP on loopback. This config allows
+    cleartext traffic *only* to localhost, and blocks it everywhere else —
+    the app never sends cleartext traffic over a real network interface.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>

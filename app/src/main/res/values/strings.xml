@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SYJ MeshChat</string>
+
+    <!-- Home screen (Milestone 2 scaffold — replaced by real chat UI in Milestone 10) -->
+    <string name="home_title">SYJ MeshChat</string>
+    <string name="home_scaffold_message">Milestone 2: architecture scaffold online.</string>
+    <string name="home_scaffold_subtitle">BLE mesh, routing, and encryption land in upcoming milestones.</string>
+</resources>

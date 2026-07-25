@@ -5,8 +5,8 @@ pass its tests, and update `CHANGELOG.md` before the next begins.
 
 | # | Milestone | Status |
 |---|-----------|--------|
-| 1 | Repository structure | ✅ In progress (this milestone) |
-| 2 | Android architecture (Gradle, Hilt, MVVM skeleton) | ⬜ Not started |
+| 1 | Repository structure | ✅ Complete |
+| 2 | Android architecture (Gradle, Hilt, MVVM skeleton) | ✅ In progress (this milestone) |
 | 3 | BLE scanning | ⬜ Not started |
 | 4 | BLE advertising | ⬜ Not started |
 | 5 | Mesh routing (TTL, duplicate suppression, relay) | ⬜ Not started |

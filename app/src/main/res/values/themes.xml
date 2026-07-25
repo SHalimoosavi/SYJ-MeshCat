@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Minimal XML theme used only for the window before Compose content is
+        set (launch background, status/nav bar defaults). All actual UI
+        theming (color scheme, typography) lives in Compose:
+        ui/theme/Theme.kt, Color.kt, Type.kt.
+    -->
+    <style name="Theme.MeshChat" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>

@@ -1,0 +1,22 @@
+# Detekt configuration for SYJ-MeshChat.
+# Builds upon Detekt's default ruleset (see app/build.gradle.kts:
+# buildUponDefaultConfig = true). Only project-specific overrides live here.
+
+style:
+  MagicNumber:
+    active: false # BLE/protocol code legitimately uses many named-but-literal byte offsets/sizes
+  MaxLineLength:
+    maxLineLength: 120
+
+complexity:
+  LongMethod:
+    threshold: 80
+  TooManyFunctions:
+    thresholdInClasses: 20
+
+naming:
+  FunctionNaming:
+    active: true
+
+comments:
+  active: false # enabled later once KDoc coverage is enforced (Milestone 12)
