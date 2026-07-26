@@ -1,8 +1,14 @@
 package com.sayanjalinexus.meshchat.ui.home
 
-import app.cash.turbine.test
+import com.sayanjalinexus.meshchat.ble.BleScanState
+import com.sayanjalinexus.meshchat.ble.PermissionsManager
 import com.sayanjalinexus.meshchat.core.TestDispatcherProvider
+import com.sayanjalinexus.meshchat.core.model.Peer
+import com.sayanjalinexus.meshchat.data.PeerRepository
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -12,13 +18,33 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
+/**
+ * [HomeViewModel] has no recurring/self-rescheduling coroutines of its own
+ * (unlike [com.sayanjalinexus.meshchat.data.PeerRepositoryImpl]'s eviction
+ * loop), so `advanceUntilIdle()` is safe here: every launched coroutine
+ * genuinely runs to a resting suspension point rather than perpetually
+ * rescheduling itself.
+ */
 class HomeViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
+    private val fakePeers = MutableStateFlow<List<Peer>>(emptyList())
+    private val fakeScanState = MutableStateFlow<BleScanState>(BleScanState.Idle)
+
+    private lateinit var peerRepository: PeerRepository
+    private lateinit var permissionsManager: PermissionsManager
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
+        peerRepository = mockk(relaxed = true) {
+            every { peers } returns fakePeers
+            every { scanState } returns fakeScanState
+        }
+        permissionsManager = mockk {
+            every { hasAllPermissions() } returns true
+            every { requiredPermissions() } returns arrayOf("android.permission.BLUETOOTH_SCAN")
+        }
     }
 
     @After
@@ -26,28 +52,57 @@ class HomeViewModelTest {
         Dispatchers.resetMain()
     }
 
+    private fun buildViewModel() = HomeViewModel(
+        dispatcherProvider = TestDispatcherProvider(testDispatcher),
+        peerRepository = peerRepository,
+        permissionsManager = permissionsManager,
+    )
+
     @Test
     fun `home view model loads scaffold status message on init`() = runTest(testDispatcher) {
-        val viewModel = HomeViewModel(
-            dispatcherProvider = TestDispatcherProvider(testDispatcher),
-        )
+        val viewModel = buildViewModel()
+        testDispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.uiState.test {
-            // 1. Default state, before init{}'s coroutine has run.
-            val initial = awaitItem()
-            assertEquals(HomeUiState(), initial)
+        val state = viewModel.uiState.value
+        assertEquals(false, state.isLoading)
+        assertEquals("Milestone 3: BLE scanning online.", state.statusMessage)
+        assertEquals(null, state.errorMessage)
+    }
 
-            // 2. isLoading flips true synchronously at the start of loadStatus().
-            val loading = awaitItem()
-            assertEquals(true, loading.isLoading)
+    @Test
+    fun `home view model reflects PeerRepository scan state and peers`() = runTest(testDispatcher) {
+        val viewModel = buildViewModel()
+        testDispatcher.scheduler.advanceUntilIdle()
 
-            // 3. Final state once the (fake) IO work completes.
-            val loaded = awaitItem()
-            assertEquals(false, loaded.isLoading)
-            assertEquals("Milestone 2: architecture scaffold online.", loaded.statusMessage)
-            assertEquals(null, loaded.errorMessage)
+        fakeScanState.value = BleScanState.Scanning
+        testDispatcher.scheduler.advanceUntilIdle()
+        assertEquals(BleScanState.Scanning, viewModel.uiState.value.bleScanState)
 
-            cancelAndIgnoreRemainingEvents()
-        }
+        val peer = Peer(address = "AA:BB:CC:DD:EE:FF", nickname = "node-1", rssi = -50, lastSeenAt = 0L)
+        fakePeers.value = listOf(peer)
+        testDispatcher.scheduler.advanceUntilIdle()
+        assertEquals(listOf(peer), viewModel.uiState.value.peers)
+    }
+
+    @Test
+    fun `onPermissionsResult with denial sets PermissionsRequired state`() = runTest(testDispatcher) {
+        val viewModel = buildViewModel()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.onPermissionsResult(allGranted = false)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(BleScanState.PermissionsRequired, viewModel.uiState.value.bleScanState)
+    }
+
+    @Test
+    fun `onPermissionsResult with grant starts scanning via repository`() = runTest(testDispatcher) {
+        val viewModel = buildViewModel()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.onPermissionsResult(allGranted = true)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        io.mockk.verify { peerRepository.startScanning() }
     }
 }

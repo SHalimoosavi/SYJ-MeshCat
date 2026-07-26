@@ -12,10 +12,10 @@ A companion Python SDK (designed for Termux) talks to the running Android
 app over a local REST bridge, so mesh messaging can be scripted, automated,
 or integrated into other tools.
 
-> Status: **Milestone 2 — Android Architecture** (see [ROADMAP.md](ROADMAP.md))
+> Status: **Milestone 3 — BLE Scanning** (see [ROADMAP.md](ROADMAP.md))
 > This project is under active, milestone-by-milestone development.
-> Gradle/Hilt/MVVM/Compose scaffold is in place; BLE, crypto, and routing
-> land in upcoming milestones.
+> The app can now discover nearby mesh nodes over BLE; advertising,
+> routing, and encryption land in upcoming milestones.
 
 ---
 

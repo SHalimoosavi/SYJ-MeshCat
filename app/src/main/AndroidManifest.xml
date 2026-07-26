@@ -57,6 +57,11 @@
             </intent-filter>
         </activity>
 
+        <service
+            android:name=".service.MeshForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice" />
+
     </application>
 
 </manifest>

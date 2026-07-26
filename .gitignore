@@ -1,0 +1,53 @@
+# === Android / Gradle ===
+*.iml
+.gradle/
+/local.properties
+/.idea/
+.DS_Store
+/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+/app/build/
+/app/release/
+/app/debug/
+*.jks
+*.keystore
+!debug.keystore
+
+# === Kotlin/Java ===
+*.class
+hs_err_pid*
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.egg
+
+# === Env / secrets ===
+.env
+.env.*
+*.pem
+*.key
+!examples/**/*.example.key
+
+# === IDE ===
+.vscode/
+*.swp
+
+# === OS ===
+Thumbs.db
