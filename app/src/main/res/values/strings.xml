@@ -13,6 +13,14 @@
     <string name="ble_state_permissions_required">Bluetooth permissions are required to scan for peers</string>
     <string name="ble_state_error">Scan error — tap Start Scan to retry</string>
 
+    <!-- BLE advertise state (Milestone 4) -->
+    <string name="advertise_state_idle">Not discoverable</string>
+    <string name="advertise_state_advertising">Discoverable to nearby peers</string>
+    <string name="advertise_state_unsupported">This device cannot advertise over BLE</string>
+    <string name="advertise_state_bluetooth_disabled">Bluetooth is off — enable it to be discoverable</string>
+    <string name="advertise_state_permissions_required">Bluetooth permissions are required to be discoverable</string>
+    <string name="advertise_state_error">Advertising error — tap Start Scan to retry</string>
+
     <string name="scan_button_start">Start Scan</string>
     <string name="scan_button_stop">Stop Scan</string>
     <string name="peers_list_title">Nearby Peers</string>
@@ -20,11 +28,12 @@
     <string name="peer_rssi_format">%1$s · %2$d dBm</string>
     <string name="peer_unknown_nickname">Unknown device</string>
 
-    <!-- Foreground scanning service notification (Milestone 3) -->
+    <!-- Foreground scanning + advertising service notification (Milestone 3/4) -->
     <string name="mesh_service_notification_title">SYJ MeshChat</string>
     <string name="mesh_service_stop_action">Stop</string>
     <string name="mesh_service_channel_name">Mesh Scanning</string>
-    <string name="mesh_service_channel_description">Keeps BLE peer scanning active in the background</string>
+    <string name="mesh_service_channel_description">Keeps BLE peer scanning and advertising active in the background</string>
+    <string name="mesh_service_discoverable_suffix"> · Discoverable</string>
 
     <plurals name="mesh_service_peer_count">
         <item quantity="zero">Scanning · no peers nearby</item>
@@ -32,4 +41,3 @@
         <item quantity="other">Scanning · %d peers nearby</item>
     </plurals>
 </resources>
-

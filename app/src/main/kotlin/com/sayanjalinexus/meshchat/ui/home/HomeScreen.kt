@@ -11,8 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -28,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sayanjalinexus.meshchat.R
+import com.sayanjalinexus.meshchat.ble.AdvertiseState
 import com.sayanjalinexus.meshchat.ble.BleScanState
 import com.sayanjalinexus.meshchat.core.model.Peer
 import com.sayanjalinexus.meshchat.ui.theme.MeshChatTheme
@@ -35,10 +36,10 @@ import com.sayanjalinexus.meshchat.ui.theme.MeshChatTheme
 /**
  * Entry screen of the app. Stateful overload wires up Hilt, the
  * ViewModel's [StateFlow][kotlinx.coroutines.flow.StateFlow], and the
- * runtime permission request flow needed before BLE scanning can start.
- * The stateless overload below ([HomeScreenContent]) renders pure UI from a
- * [HomeUiState] and is what gets exercised in Compose previews and UI
- * tests (see `HomeScreenTest`).
+ * runtime permission request flow needed before BLE scanning/advertising
+ * can start. The stateless overload below ([HomeScreenContent]) renders
+ * pure UI from a [HomeUiState] and is what gets exercised in Compose
+ * previews and UI tests (see `HomeScreenTest`).
  */
 @Composable
 fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
@@ -89,6 +90,12 @@ internal fun HomeScreenContent(uiState: HomeUiState, onToggleScanClick: () -> Un
 
             Text(
                 text = bleScanStateLabel(uiState.bleScanState),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            Text(
+                text = advertiseStateLabel(uiState.advertiseState),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -168,6 +175,16 @@ private fun bleScanStateLabel(state: BleScanState): String = when (state) {
     is BleScanState.Error -> stringResource(R.string.ble_state_error)
 }
 
+@Composable
+private fun advertiseStateLabel(state: AdvertiseState): String = when (state) {
+    is AdvertiseState.Idle -> stringResource(R.string.advertise_state_idle)
+    is AdvertiseState.Advertising -> stringResource(R.string.advertise_state_advertising)
+    is AdvertiseState.Unsupported -> stringResource(R.string.advertise_state_unsupported)
+    is AdvertiseState.BluetoothDisabled -> stringResource(R.string.advertise_state_bluetooth_disabled)
+    is AdvertiseState.PermissionsRequired -> stringResource(R.string.advertise_state_permissions_required)
+    is AdvertiseState.Error -> stringResource(R.string.advertise_state_error)
+}
+
 @Preview(showBackground = true)
 @Composable
 private fun HomeScreenPreview() {
@@ -175,8 +192,9 @@ private fun HomeScreenPreview() {
         HomeScreenContent(
             uiState = HomeUiState(
                 isLoading = false,
-                statusMessage = "Milestone 3: BLE scanning online.",
+                statusMessage = "Milestone 4: BLE advertising online.",
                 bleScanState = BleScanState.Scanning,
+                advertiseState = AdvertiseState.Advertising,
                 peers = listOf(
                     Peer(address = "AA:BB:CC:DD:EE:01", nickname = "node-1", rssi = -52, lastSeenAt = 0L),
                     Peer(address = "AA:BB:CC:DD:EE:02", nickname = null, rssi = -71, lastSeenAt = 0L),

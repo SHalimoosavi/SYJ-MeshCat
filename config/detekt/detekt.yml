@@ -7,16 +7,33 @@ style:
     active: false # BLE/protocol code legitimately uses many named-but-literal byte offsets/sizes
   MaxLineLength:
     maxLineLength: 120
+  UnusedPrivateMember:
+    # @Preview composables are invoked by the Compose tooling via
+    # reflection at preview-render time, not by any code Detekt can see —
+    # without this they read as unused even though they aren't.
+    ignoreAnnotated: ['Preview']
 
 complexity:
   LongMethod:
     threshold: 80
   TooManyFunctions:
     thresholdInClasses: 20
+  ReturnCount:
+    # The BLE repositories (PeerRepositoryImpl.startScanning,
+    # AdvertisingRepositoryImpl.startAdvertising) use early-return guard
+    # clauses to check Bluetooth support / enabled / permissions in
+    # sequence — more readable than nesting, and a standard Kotlin idiom,
+    # but trips the default threshold of 2.
+    max: 5
 
 naming:
   FunctionNaming:
     active: true
+    # Composable functions are conventionally PascalCase (they're used
+    # like UI components, e.g. `HomeScreen()`), which is the opposite of
+    # normal Kotlin function-naming convention that this rule otherwise
+    # enforces correctly everywhere else.
+    ignoreAnnotated: ['Composable']
 
 comments:
   active: false # enabled later once KDoc coverage is enforced (Milestone 12)

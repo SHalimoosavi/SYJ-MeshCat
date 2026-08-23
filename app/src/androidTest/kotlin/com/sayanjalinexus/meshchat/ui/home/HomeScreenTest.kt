@@ -4,6 +4,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.sayanjalinexus.meshchat.R
+import com.sayanjalinexus.meshchat.ble.AdvertiseState
 import com.sayanjalinexus.meshchat.ble.BleScanState
 import com.sayanjalinexus.meshchat.core.model.Peer
 import com.sayanjalinexus.meshchat.ui.theme.MeshChatTheme
@@ -27,14 +28,14 @@ class HomeScreenTest {
                 HomeScreenContent(
                     uiState = HomeUiState(
                         isLoading = false,
-                        statusMessage = "Milestone 3: BLE scanning online.",
+                        statusMessage = "Milestone 4: BLE advertising online.",
                     ),
                 )
             }
         }
 
         composeTestRule
-            .onNodeWithText("Milestone 3: BLE scanning online.")
+            .onNodeWithText("Milestone 4: BLE advertising online.")
             .assertExists()
     }
 
@@ -83,6 +84,19 @@ class HomeScreenTest {
         }
 
         composeTestRule.onNodeWithText("node-1").assertExists()
+    }
+
+    @Test
+    fun homeScreen_displaysAdvertisingLabel_whenDiscoverable() {
+        composeTestRule.setContent {
+            MeshChatTheme {
+                HomeScreenContent(uiState = HomeUiState(advertiseState = AdvertiseState.Advertising))
+            }
+        }
+
+        composeTestRule
+            .onNodeWithText(composeTestRule.activity.getString(R.string.advertise_state_advertising))
+            .assertExists()
     }
 
     @Test

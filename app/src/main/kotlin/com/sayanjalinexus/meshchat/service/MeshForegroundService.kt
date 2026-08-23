@@ -10,26 +10,34 @@ import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import com.sayanjalinexus.meshchat.R
+import com.sayanjalinexus.meshchat.ble.AdvertiseState
+import com.sayanjalinexus.meshchat.data.AdvertisingRepository
 import com.sayanjalinexus.meshchat.data.PeerRepository
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
- * Keeps [PeerRepository] scanning alive while the app is backgrounded, via
- * a persistent low-priority notification (required by Android for any
- * long-running background service since API 26).
+ * Keeps [PeerRepository] scanning and [AdvertisingRepository] advertising
+ * alive while the app is backgrounded, via a persistent low-priority
+ * notification (required by Android for any long-running background
+ * service since API 26).
  *
  * This service does not implement BLE logic itself — it only starts/stops
- * [PeerRepository] scanning and reflects live peer count in the
- * notification. All actual scanning lives in [com.sayanjalinexus.meshchat.ble.AndroidBleTransport],
- * reached via [PeerRepository].
+ * the two repositories and reflects their combined state in the
+ * notification. All actual radio work lives in
+ * [com.sayanjalinexus.meshchat.ble.AndroidBleTransport] and
+ * [com.sayanjalinexus.meshchat.ble.AndroidBleAdvertiser].
  */
 @AndroidEntryPoint
 class MeshForegroundService : LifecycleService() {
 
     @Inject
     lateinit var peerRepository: PeerRepository
+
+    @Inject
+    lateinit var advertisingRepository: AdvertisingRepository
 
     override fun onCreate() {
         super.onCreate()
@@ -42,12 +50,14 @@ class MeshForegroundService : LifecycleService() {
         when (intent?.action) {
             ACTION_STOP -> {
                 peerRepository.stopScanning()
+                advertisingRepository.stopAdvertising()
                 stopSelf()
             }
             else -> {
-                startForeground(NOTIFICATION_ID, buildNotification(peerCount = 0))
+                startForeground(NOTIFICATION_ID, buildNotification(peerCount = 0, advertising = false))
                 peerRepository.startScanning()
-                observePeerCountForNotification()
+                advertisingRepository.startAdvertising()
+                observeStateForNotification()
             }
         }
         return START_STICKY
@@ -55,19 +65,22 @@ class MeshForegroundService : LifecycleService() {
 
     override fun onDestroy() {
         peerRepository.stopScanning()
+        advertisingRepository.stopAdvertising()
         super.onDestroy()
     }
 
-    private fun observePeerCountForNotification() {
+    private fun observeStateForNotification() {
         lifecycleScope.launch {
-            peerRepository.peers.collect { peers ->
+            combine(peerRepository.peers, advertisingRepository.advertiseState) { peers, advertiseState ->
+                peers.size to (advertiseState == AdvertiseState.Advertising)
+            }.collect { (peerCount, advertising) ->
                 val manager = getSystemService(NotificationManager::class.java)
-                manager?.notify(NOTIFICATION_ID, buildNotification(peers.size))
+                manager?.notify(NOTIFICATION_ID, buildNotification(peerCount, advertising))
             }
         }
     }
 
-    private fun buildNotification(peerCount: Int): Notification {
+    private fun buildNotification(peerCount: Int, advertising: Boolean): Notification {
         val stopPendingIntent = PendingIntent.getService(
             this,
             0,
@@ -75,15 +88,20 @@ class MeshForegroundService : LifecycleService() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
 
-        val contentText = resources.getQuantityString(
+        val peerCountText = resources.getQuantityString(
             R.plurals.mesh_service_peer_count,
             peerCount,
             peerCount,
         )
+        val discoverabilitySuffix = if (advertising) {
+            getString(R.string.mesh_service_discoverable_suffix)
+        } else {
+            ""
+        }
 
         return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setContentTitle(getString(R.string.mesh_service_notification_title))
-            .setContentText(contentText)
+            .setContentText(peerCountText + discoverabilitySuffix)
             .setSmallIcon(R.drawable.ic_notification_mesh)
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)

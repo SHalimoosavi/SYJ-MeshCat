@@ -4,6 +4,7 @@ import com.sayanjalinexus.meshchat.ble.BleScanState
 import com.sayanjalinexus.meshchat.ble.PermissionsManager
 import com.sayanjalinexus.meshchat.core.BaseViewModel
 import com.sayanjalinexus.meshchat.core.DispatcherProvider
+import com.sayanjalinexus.meshchat.data.AdvertisingRepository
 import com.sayanjalinexus.meshchat.data.PeerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,18 +21,21 @@ import javax.inject.Inject
  * Establishes the pattern every future screen ViewModel follows:
  * - private [MutableStateFlow] backing a public read-only [StateFlow],
  * - Hilt constructor injection ([DispatcherProvider], [PeerRepository],
- *   [PermissionsManager]),
+ *   [AdvertisingRepository], [PermissionsManager]),
  * - work funneled through [launchSafely] from [BaseViewModel] so errors
  *   land in [HomeUiState.errorMessage] instead of crashing the app.
  *
- * BLE scanning itself (start/stop, permission gating) is delegated to
- * [PeerRepository] — this ViewModel only reflects its state into
- * [HomeUiState] and forwards user intent (toggling the scan button).
+ * BLE scanning and advertising themselves (start/stop, permission gating)
+ * are delegated to [PeerRepository] and [AdvertisingRepository] — this
+ * ViewModel only reflects their state into [HomeUiState] and forwards user
+ * intent. The single "scan" toggle drives both together, since finding
+ * peers and being found by them are both needed for the mesh to work.
  */
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val dispatcherProvider: DispatcherProvider,
     private val peerRepository: PeerRepository,
+    private val advertisingRepository: AdvertisingRepository,
     private val permissionsManager: PermissionsManager,
 ) : BaseViewModel() {
 
@@ -43,7 +47,7 @@ class HomeViewModel @Inject constructor(
         observeMeshState()
     }
 
-    /** Permissions the UI must request before scanning can start. */
+    /** Permissions the UI must request before scanning/advertising can start. */
     fun requiredPermissions(): Array<String> = permissionsManager.requiredPermissions()
 
     fun hasRequiredPermissions(): Boolean = permissionsManager.hasAllPermissions()
@@ -51,7 +55,7 @@ class HomeViewModel @Inject constructor(
     /** Called by the UI after the system permission dialog is dismissed. */
     fun onPermissionsResult(allGranted: Boolean) {
         if (allGranted) {
-            startScanning()
+            startDiscovery()
         } else {
             _uiState.update { it.copy(bleScanState = BleScanState.PermissionsRequired) }
         }
@@ -60,25 +64,34 @@ class HomeViewModel @Inject constructor(
     fun onToggleScanRequested() {
         if (_uiState.value.bleScanState == BleScanState.Scanning) {
             peerRepository.stopScanning()
+            advertisingRepository.stopAdvertising()
         } else {
-            startScanning()
+            startDiscovery()
         }
     }
 
-    private fun startScanning() {
+    /** Starts both scanning (find others) and advertising (be found) together. */
+    private fun startDiscovery() {
         if (!permissionsManager.hasAllPermissions()) {
             _uiState.update { it.copy(bleScanState = BleScanState.PermissionsRequired) }
             return
         }
         peerRepository.startScanning()
+        advertisingRepository.startAdvertising()
     }
 
     private fun observeMeshState() {
         launchSafely {
-            combine(peerRepository.peers, peerRepository.scanState) { peers, scanState ->
-                peers to scanState
-            }.collect { (peers, scanState) ->
-                _uiState.update { it.copy(peers = peers, bleScanState = scanState) }
+            combine(
+                peerRepository.peers,
+                peerRepository.scanState,
+                advertisingRepository.advertiseState,
+            ) { peers, scanState, advertiseState ->
+                Triple(peers, scanState, advertiseState)
+            }.collect { (peers, scanState, advertiseState) ->
+                _uiState.update {
+                    it.copy(peers = peers, bleScanState = scanState, advertiseState = advertiseState)
+                }
             }
         }
     }
@@ -92,7 +105,7 @@ class HomeViewModel @Inject constructor(
             // dispatcher to establish the convention even though there's no
             // I/O yet.
             val status = withContext(dispatcherProvider.io) {
-                "Milestone 3: BLE scanning online."
+                "Milestone 4: BLE advertising online."
             }
 
             _uiState.update { it.copy(isLoading = false, statusMessage = status) }
