@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+
 package com.sayanjalinexus.meshchat.ui.home
 
 import androidx.activity.compose.rememberLauncherForActivityResult
