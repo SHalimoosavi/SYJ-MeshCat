@@ -42,7 +42,7 @@ class AdvertisingRepositoryImplTest {
     @Test
     fun `startAdvertising without permissions sets PermissionsRequired and does not advertise`() = runTest(testDispatcher) {
         every { permissionsManager.hasAllPermissions() } returns false
-        val repository = buildRepository(this)
+        val repository = buildRepository(backgroundScope)
 
         repository.startAdvertising()
 
@@ -53,7 +53,7 @@ class AdvertisingRepositoryImplTest {
     @Test
     fun `startAdvertising when bluetooth unsupported sets Unsupported state`() = runTest(testDispatcher) {
         bleAdvertiser.bluetoothSupported = false
-        val repository = buildRepository(this)
+        val repository = buildRepository(backgroundScope)
 
         repository.startAdvertising()
 
@@ -63,7 +63,7 @@ class AdvertisingRepositoryImplTest {
     @Test
     fun `startAdvertising when bluetooth disabled sets BluetoothDisabled state`() = runTest(testDispatcher) {
         bleAdvertiser.bluetoothEnabled = false
-        val repository = buildRepository(this)
+        val repository = buildRepository(backgroundScope)
 
         repository.startAdvertising()
 
@@ -73,7 +73,7 @@ class AdvertisingRepositoryImplTest {
     @Test
     fun `startAdvertising when chipset cannot advertise sets Unsupported state`() = runTest(testDispatcher) {
         bleAdvertiser.advertisingSupported = false
-        val repository = buildRepository(this)
+        val repository = buildRepository(backgroundScope)
 
         repository.startAdvertising()
 
@@ -82,7 +82,7 @@ class AdvertisingRepositoryImplTest {
 
     @Test
     fun `successful start event transitions state to Advertising`() = runTest(testDispatcher) {
-        val repository = buildRepository(this)
+        val repository = buildRepository(backgroundScope)
 
         repository.startAdvertising()
         bleAdvertiser.emit(AdvertiseEvent.Started)
@@ -94,7 +94,7 @@ class AdvertisingRepositoryImplTest {
 
     @Test
     fun `failure event transitions state to Error with the reported reason`() = runTest(testDispatcher) {
-        val repository = buildRepository(this)
+        val repository = buildRepository(backgroundScope)
 
         repository.startAdvertising()
         bleAdvertiser.emit(AdvertiseEvent.Failure(com.sayanjalinexus.meshchat.ble.AdvertiseFailureReason.TOO_MANY_ADVERTISERS))
@@ -108,7 +108,7 @@ class AdvertisingRepositoryImplTest {
 
     @Test
     fun `stopAdvertising cancels the collector and resets state to Idle`() = runTest(testDispatcher) {
-        val repository = buildRepository(this)
+        val repository = buildRepository(backgroundScope)
         repository.startAdvertising()
         bleAdvertiser.emit(AdvertiseEvent.Started)
         testDispatcher.scheduler.runCurrent()
@@ -121,7 +121,7 @@ class AdvertisingRepositoryImplTest {
 
     @Test
     fun `calling startAdvertising twice does not double-subscribe`() = runTest(testDispatcher) {
-        val repository = buildRepository(this)
+        val repository = buildRepository(backgroundScope)
 
         repository.startAdvertising()
         repository.startAdvertising()

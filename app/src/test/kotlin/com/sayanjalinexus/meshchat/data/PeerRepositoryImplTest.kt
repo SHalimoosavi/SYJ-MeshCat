@@ -45,7 +45,7 @@ class PeerRepositoryImplTest {
     @Test
     fun `startScanning without permissions sets PermissionsRequired and does not scan`() = runTest(testDispatcher) {
         every { permissionsManager.hasAllPermissions() } returns false
-        val repository = buildRepository(this)
+        val repository = buildRepository(backgroundScope)
 
         repository.startScanning()
 
@@ -56,7 +56,7 @@ class PeerRepositoryImplTest {
     @Test
     fun `startScanning when bluetooth unsupported sets Unsupported state`() = runTest(testDispatcher) {
         bleTransport.bluetoothSupported = false
-        val repository = buildRepository(this)
+        val repository = buildRepository(backgroundScope)
 
         repository.startScanning()
 
@@ -66,7 +66,7 @@ class PeerRepositoryImplTest {
     @Test
     fun `startScanning when bluetooth disabled sets BluetoothDisabled state`() = runTest(testDispatcher) {
         bleTransport.bluetoothEnabled = false
-        val repository = buildRepository(this)
+        val repository = buildRepository(backgroundScope)
 
         repository.startScanning()
 
@@ -75,7 +75,7 @@ class PeerRepositoryImplTest {
 
     @Test
     fun `startScanning with everything available sets Scanning state and subscribes to transport`() = runTest(testDispatcher) {
-        val repository = buildRepository(this)
+        val repository = buildRepository(backgroundScope)
 
         repository.startScanning()
 
@@ -85,7 +85,7 @@ class PeerRepositoryImplTest {
 
     @Test
     fun `discovered peer appears in peers list`() = runTest(testDispatcher) {
-        val repository = buildRepository(this)
+        val repository = buildRepository(backgroundScope)
         repository.startScanning()
 
         val peer = Peer(
@@ -102,7 +102,7 @@ class PeerRepositoryImplTest {
 
     @Test
     fun `stopScanning cancels the collector and resets state to Idle`() = runTest(testDispatcher) {
-        val repository = buildRepository(this)
+        val repository = buildRepository(backgroundScope)
         repository.startScanning()
         assertEquals(BleScanState.Scanning, repository.scanState.value)
 
@@ -113,7 +113,7 @@ class PeerRepositoryImplTest {
 
     @Test
     fun `calling startScanning twice does not double-subscribe`() = runTest(testDispatcher) {
-        val repository = buildRepository(this)
+        val repository = buildRepository(backgroundScope)
 
         repository.startScanning()
         repository.startScanning()
