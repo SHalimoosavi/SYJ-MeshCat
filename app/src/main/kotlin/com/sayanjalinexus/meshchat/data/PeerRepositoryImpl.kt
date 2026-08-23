@@ -62,6 +62,7 @@ class PeerRepositoryImpl @Inject constructor(
         startEvictionLoop()
     }
 
+    @Suppress("ReturnCount") // early-return guard clauses for Bluetooth support/enabled/permissions checks
     override fun startScanning() {
         if (scanJob?.isActive == true) return
 

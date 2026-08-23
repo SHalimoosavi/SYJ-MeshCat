@@ -39,6 +39,7 @@ class AdvertisingRepositoryImpl @Inject constructor(
 
     private var advertiseJob: Job? = null
 
+    @Suppress("ReturnCount") // early-return guard clauses for Bluetooth support/enabled/permissions checks
     override fun startAdvertising() {
         if (advertiseJob?.isActive == true) return
 
