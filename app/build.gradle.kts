@@ -148,10 +148,9 @@ dependencies {
 ktlint {
     version.set("1.3.1")
     android.set(true)
-    // Not yet run against the real Kotlin toolchain in this environment —
-    // kept non-blocking until a real `./gradlew ktlintCheck` pass has been
-    // run and any findings cleaned up. Flip to false once verified.
-    ignoreFailures.set(true)
+    // Verified clean against the real Android/Kotlin toolchain via CI
+    // (GitHub Actions) as of Milestone 4 — blocking again.
+    ignoreFailures.set(false)
     filter {
         exclude("**/build/**")
     }
