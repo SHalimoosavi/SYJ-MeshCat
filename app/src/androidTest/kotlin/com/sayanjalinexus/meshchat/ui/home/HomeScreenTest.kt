@@ -17,20 +17,19 @@ import org.junit.Test
  * (unlike [HomeViewModelTest], which is a pure-JVM unit test).
  */
 class HomeScreenTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
     @Test
     fun homeScreen_displaysLoadedStatusMessage() {
+        val uiState = HomeUiState(
+            isLoading = false,
+            statusMessage = "Milestone 4: BLE advertising online.",
+        )
+
         composeTestRule.setContent {
             MeshChatTheme {
-                HomeScreenContent(
-                    uiState = HomeUiState(
-                        isLoading = false,
-                        statusMessage = "Milestone 4: BLE advertising online.",
-                    ),
-                )
+                HomeScreenContent(uiState = uiState)
             }
         }
 
@@ -41,15 +40,15 @@ class HomeScreenTest {
 
     @Test
     fun homeScreen_displaysErrorMessage_whenPresent() {
+        val uiState = HomeUiState(
+            isLoading = false,
+            statusMessage = "",
+            errorMessage = "Something went wrong",
+        )
+
         composeTestRule.setContent {
             MeshChatTheme {
-                HomeScreenContent(
-                    uiState = HomeUiState(
-                        isLoading = false,
-                        statusMessage = "",
-                        errorMessage = "Something went wrong",
-                    ),
-                )
+                HomeScreenContent(uiState = uiState)
             }
         }
 
@@ -60,9 +59,11 @@ class HomeScreenTest {
 
     @Test
     fun homeScreen_displaysEmptyPeersMessage_whenNoPeersDiscovered() {
+        val uiState = HomeUiState(peers = emptyList())
+
         composeTestRule.setContent {
             MeshChatTheme {
-                HomeScreenContent(uiState = HomeUiState(peers = emptyList()))
+                HomeScreenContent(uiState = uiState)
             }
         }
 
@@ -74,12 +75,11 @@ class HomeScreenTest {
     @Test
     fun homeScreen_displaysDiscoveredPeerNickname() {
         val peer = Peer(address = "AA:BB:CC:DD:EE:FF", nickname = "node-1", rssi = -55, lastSeenAt = 0L)
+        val uiState = HomeUiState(bleScanState = BleScanState.Scanning, peers = listOf(peer))
 
         composeTestRule.setContent {
             MeshChatTheme {
-                HomeScreenContent(
-                    uiState = HomeUiState(bleScanState = BleScanState.Scanning, peers = listOf(peer)),
-                )
+                HomeScreenContent(uiState = uiState)
             }
         }
 
@@ -88,9 +88,11 @@ class HomeScreenTest {
 
     @Test
     fun homeScreen_displaysAdvertisingLabel_whenDiscoverable() {
+        val uiState = HomeUiState(advertiseState = AdvertiseState.Advertising)
+
         composeTestRule.setContent {
             MeshChatTheme {
-                HomeScreenContent(uiState = HomeUiState(advertiseState = AdvertiseState.Advertising))
+                HomeScreenContent(uiState = uiState)
             }
         }
 
@@ -102,11 +104,12 @@ class HomeScreenTest {
     @Test
     fun homeScreen_scanButtonClick_invokesCallback() {
         var clicked = false
+        val uiState = HomeUiState(bleScanState = BleScanState.Idle)
 
         composeTestRule.setContent {
             MeshChatTheme {
                 HomeScreenContent(
-                    uiState = HomeUiState(bleScanState = BleScanState.Idle),
+                    uiState = uiState,
                     onToggleScanClick = { clicked = true },
                 )
             }
