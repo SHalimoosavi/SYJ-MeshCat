@@ -22,10 +22,11 @@ class HomeScreenTest {
 
     @Test
     fun homeScreen_displaysLoadedStatusMessage() {
-        val uiState = HomeUiState(
-            isLoading = false,
-            statusMessage = "Milestone 4: BLE advertising online.",
-        )
+        val uiState =
+            HomeUiState(
+                isLoading = false,
+                statusMessage = "Milestone 4: BLE advertising online.",
+            )
 
         composeTestRule.setContent {
             MeshChatTheme {
@@ -40,11 +41,12 @@ class HomeScreenTest {
 
     @Test
     fun homeScreen_displaysErrorMessage_whenPresent() {
-        val uiState = HomeUiState(
-            isLoading = false,
-            statusMessage = "",
-            errorMessage = "Something went wrong",
-        )
+        val uiState =
+            HomeUiState(
+                isLoading = false,
+                statusMessage = "",
+                errorMessage = "Something went wrong",
+            )
 
         composeTestRule.setContent {
             MeshChatTheme {
