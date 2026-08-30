@@ -29,7 +29,6 @@ import org.junit.Test
  * rescheduling itself.
  */
 class HomeViewModelTest {
-
     private val testDispatcher = StandardTestDispatcher()
     private val fakePeers = MutableStateFlow<List<Peer>>(emptyList())
     private val fakeScanState = MutableStateFlow<BleScanState>(BleScanState.Idle)
@@ -60,84 +59,91 @@ class HomeViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun buildViewModel() = HomeViewModel(
-        dispatcherProvider = TestDispatcherProvider(testDispatcher),
-        peerRepository = peerRepository,
-        advertisingRepository = advertisingRepository,
-        permissionsManager = permissionsManager,
-    )
+    private fun buildViewModel() =
+        HomeViewModel(
+            dispatcherProvider = TestDispatcherProvider(testDispatcher),
+            peerRepository = peerRepository,
+            advertisingRepository = advertisingRepository,
+            permissionsManager = permissionsManager,
+        )
 
     @Test
-    fun `home view model loads scaffold status message on init`() = runTest(testDispatcher) {
-        val viewModel = buildViewModel()
-        testDispatcher.scheduler.advanceUntilIdle()
+    fun `home view model loads scaffold status message on init`() =
+        runTest(testDispatcher) {
+            val viewModel = buildViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
 
-        val state = viewModel.uiState.value
-        assertEquals(false, state.isLoading)
-        assertEquals("Milestone 4: BLE advertising online.", state.statusMessage)
-        assertEquals(null, state.errorMessage)
-    }
-
-    @Test
-    fun `home view model reflects PeerRepository scan state and peers`() = runTest(testDispatcher) {
-        val viewModel = buildViewModel()
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        fakeScanState.value = BleScanState.Scanning
-        testDispatcher.scheduler.advanceUntilIdle()
-        assertEquals(BleScanState.Scanning, viewModel.uiState.value.bleScanState)
-
-        val peer = Peer(address = "AA:BB:CC:DD:EE:FF", nickname = "node-1", rssi = -50, lastSeenAt = 0L)
-        fakePeers.value = listOf(peer)
-        testDispatcher.scheduler.advanceUntilIdle()
-        assertEquals(listOf(peer), viewModel.uiState.value.peers)
-    }
+            val state = viewModel.uiState.value
+            assertEquals(false, state.isLoading)
+            assertEquals("Milestone 4: BLE advertising online.", state.statusMessage)
+            assertEquals(null, state.errorMessage)
+        }
 
     @Test
-    fun `home view model reflects AdvertisingRepository state`() = runTest(testDispatcher) {
-        val viewModel = buildViewModel()
-        testDispatcher.scheduler.advanceUntilIdle()
+    fun `home view model reflects PeerRepository scan state and peers`() =
+        runTest(testDispatcher) {
+            val viewModel = buildViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
 
-        fakeAdvertiseState.value = AdvertiseState.Advertising
-        testDispatcher.scheduler.advanceUntilIdle()
+            fakeScanState.value = BleScanState.Scanning
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertEquals(BleScanState.Scanning, viewModel.uiState.value.bleScanState)
 
-        assertEquals(AdvertiseState.Advertising, viewModel.uiState.value.advertiseState)
-    }
-
-    @Test
-    fun `onPermissionsResult with denial sets PermissionsRequired state`() = runTest(testDispatcher) {
-        val viewModel = buildViewModel()
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        viewModel.onPermissionsResult(allGranted = false)
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        assertEquals(BleScanState.PermissionsRequired, viewModel.uiState.value.bleScanState)
-    }
+            val peer = Peer(address = "AA:BB:CC:DD:EE:FF", nickname = "node-1", rssi = -50, lastSeenAt = 0L)
+            fakePeers.value = listOf(peer)
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertEquals(listOf(peer), viewModel.uiState.value.peers)
+        }
 
     @Test
-    fun `onPermissionsResult with grant starts both scanning and advertising`() = runTest(testDispatcher) {
-        val viewModel = buildViewModel()
-        testDispatcher.scheduler.advanceUntilIdle()
+    fun `home view model reflects AdvertisingRepository state`() =
+        runTest(testDispatcher) {
+            val viewModel = buildViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.onPermissionsResult(allGranted = true)
-        testDispatcher.scheduler.advanceUntilIdle()
+            fakeAdvertiseState.value = AdvertiseState.Advertising
+            testDispatcher.scheduler.advanceUntilIdle()
 
-        verify { peerRepository.startScanning() }
-        verify { advertisingRepository.startAdvertising() }
-    }
+            assertEquals(AdvertiseState.Advertising, viewModel.uiState.value.advertiseState)
+        }
 
     @Test
-    fun `onToggleScanRequested while scanning stops both scanning and advertising`() = runTest(testDispatcher) {
-        val viewModel = buildViewModel()
-        testDispatcher.scheduler.advanceUntilIdle()
-        fakeScanState.value = BleScanState.Scanning
-        testDispatcher.scheduler.advanceUntilIdle()
+    fun `onPermissionsResult with denial sets PermissionsRequired state`() =
+        runTest(testDispatcher) {
+            val viewModel = buildViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
 
-        viewModel.onToggleScanRequested()
-        testDispatcher.scheduler.advanceUntilIdle()
+            viewModel.onPermissionsResult(allGranted = false)
+            testDispatcher.scheduler.advanceUntilIdle()
 
-        verify { peerRepository.stopScanning() }
-        verify { advertisingRepository.stopAdvertising() }
-    }
+            assertEquals(BleScanState.PermissionsRequired, viewModel.uiState.value.bleScanState)
+        }
+
+    @Test
+    fun `onPermissionsResult with grant starts both scanning and advertising`() =
+        runTest(testDispatcher) {
+            val viewModel = buildViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            viewModel.onPermissionsResult(allGranted = true)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verify { peerRepository.startScanning() }
+            verify { advertisingRepository.startAdvertising() }
+        }
+
+    @Test
+    fun `onToggleScanRequested while scanning stops both scanning and advertising`() =
+        runTest(testDispatcher) {
+            val viewModel = buildViewModel()
+            testDispatcher.scheduler.advanceUntilIdle()
+            fakeScanState.value = BleScanState.Scanning
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            viewModel.onToggleScanRequested()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            verify { peerRepository.stopScanning() }
+            verify { advertisingRepository.stopAdvertising() }
+        }
 }
